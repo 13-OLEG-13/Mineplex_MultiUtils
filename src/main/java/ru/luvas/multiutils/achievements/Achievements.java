@@ -84,8 +84,8 @@ public class Achievements {
     
     public void addAchievement(final Achievement a) {
         if(RSocketConnector.getConnectorMode() != ConnectorMode.CLIENT)
-            throw new IllegalStateException("This method couldn't be used by multiproxy!");
-        if(hasAchievement(a))
+            throw new IllegalStateException("This method can't be used by multiproxy!");
+        if(achievements == null || hasAchievement(a))
             return;
         RIndependentClient.getInstance().send(new Packet2Achievements(RIndependentClient.getInstance().getName(), owner, false, "null", a.getId()) {
         

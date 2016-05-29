@@ -56,7 +56,22 @@ public enum Achievement {
     FOS_HG("Организатор голодных игр", FEATS_OF_STRENGTH, 0,
             "Получите достижения доминатора",
             "дистрикта и бессменного",
-            "победителя 5-го уровня");
+            "победителя 5-го уровня"),
+    BW_FIRST_KILL("Когда ну очень хочешь спать", BEDWARS, 0, "Убейте своего первого врага на BedWars"),
+    BW_KILLER_I("Диванный воитель I", BEDWARS, 0, "Убейте 500 игроков на BedWars"),
+    BW_KILLER_II("Диванный воитель II", BEDWARS, 0, "Убейте 1200 игроков на BedWars"),
+    BW_KILLER_III("Диванный воитель III", BEDWARS, 0, "Убейте 2300 игроков на BedWars"),
+    BW_KILLER_IV("Диванный воитель IV", BEDWARS, 0, "Убейте 5000 игроков на BedWars"),
+    BW_KILLER_V("Диванный воитель V", BEDWARS, 0, "Убейте 10000 игроков на BedWars"),
+    BW_WINNER_I("Мистер Bed I", BEDWARS, 0, "Победите в 10 играх на BedWars"),
+    BW_WINNER_II("Мистер Bed II", BEDWARS, 0, "Победите в 40 играх на BedWars"),
+    BW_WINNER_III("Мистер Bed III", BEDWARS, 0, "Победите в 90 играх на BedWars"),
+    BW_WINNER_IV("Мистер Bed IV", BEDWARS, 0, "Победите в 235 играх на BedWars"),
+    BW_WINNER_V("Мистер Bed V", BEDWARS, 0, "Победите в 550 играх на BedWars"),
+    FOS_BW("Повелитель снов", FEATS_OF_STRENGTH, 0,
+            "Получите достижения диванного",
+            "воителя и мистера",
+            "Bed'a 5-го уровня");
     
     @Getter
     private final int id;
