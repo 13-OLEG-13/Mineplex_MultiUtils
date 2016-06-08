@@ -68,6 +68,8 @@ public class Packet6PartyUpdate extends RPacket {
                     
                         @Override
                         public void execute() {
+                            if(getMembers().isEmpty())
+                                return;
                             Party.updateRecreation(getMembers());
                         }
                     
