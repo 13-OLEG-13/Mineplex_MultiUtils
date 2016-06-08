@@ -61,13 +61,21 @@ public abstract class RIndependentClient extends RClient {
                                             f.set(trueExecp, f.get(execp));
                                             f.setAccessible(false);
                                         }
-                                        trueExecp.execute();
+                                        try {
+                                            trueExecp.execute();
+                                        }catch(Exception ex) {
+                                            ex.printStackTrace();
+                                        }
                                         executed = true;
                                     }
                                 }
                             }
                             if(!executed)
-                                packet.handleByClient();
+                                try {
+                                    packet.handleByClient();
+                                }catch(Exception ex) {
+                                    ex.printStackTrace();
+                                }
                         }
                         try {
                             Thread.sleep(50l);
