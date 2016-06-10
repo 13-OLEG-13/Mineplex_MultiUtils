@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import lombok.Getter;
 import ru.luvas.multiutils.Logger;
 import ru.luvas.multiutils.sockets.RExecutablePacket.Side;
 
@@ -34,6 +35,8 @@ public abstract class RServer {
     private final ReadWriteLock clientsLock = new ReentrantReadWriteLock();
     private final Map<String, RClient> clients = new HashMap<>();
     private final Map<String, RExecutablePacket> executables = new HashMap<>();
+    
+    @Getter
     private final Queue<QueuedPacket> queue = new LinkedList<>();
 
     public RServer(int port) {
@@ -297,6 +300,11 @@ public abstract class RServer {
         public QueuedPacket(RClient receiver, RPacket packet) {
             this.receiver = receiver;
             this.packet = packet;
+        }
+        
+        @Override
+        public String toString() {
+            return "{" + receiver.getName() + ";" + packet.getClass().getSimpleName() + "}";
         }
         
     }
