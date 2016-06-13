@@ -20,7 +20,7 @@ public enum PermissionGroup {
     BUILDER(400, "&e&lBUILDER &e", "&e&lBuilder &e", "&eСтроитель", "&eСтроители", 2f),
     SRBUILDER(450, "&6&lBUILDER+ &6", "&6&lBUILDER+ &6", "&6Ст. Строитель", "&6Ст. Строители", 3f),
     HELPER(500, "&9&lHELPER &9", "&9&lHELPER &9", "&9Хелпер", "&9Хелперы", 2f),
-    MODERATOR(600, "&2&lMOD &2", "&2&lMOD &2", "&2Ст. Модератор", "&2Ст. Модераторы", 3f),
+    MODERATOR(600, "&2&lMOD &2", "&2&lMOD &2", "&2Модератор", "&2Модераторы", 3f),
     DEVELOPER(700, "&c&lDEV &c", "&c&lDEV &c", "&cРазработчик", "&cРазработчики", 10f),
     ADMINISTRATOR(800, "&c&lADMIN &c", "&c&lADMIN &c", "&cАдминистратор", "&cАдминистраторы", 10f),
     OWNER(900, "&c&lOWNER ", "&c&lOWNER ", "&4Владелец", "&4Владельцы", 10f);
