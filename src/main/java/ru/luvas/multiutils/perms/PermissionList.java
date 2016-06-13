@@ -97,7 +97,7 @@ public class PermissionList {
             if(main == PermissionGroup.VIP_PLUS)
                 prefix = "&3&lβeta &3";
             else if(main == PermissionGroup.RICH)
-                prefix = "&b&lβeta &2";
+                prefix = "&b&lβeta &b";
             return prefix;
         }
         return main.getUncoloredLongPrefix();
