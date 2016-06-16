@@ -25,7 +25,7 @@ public abstract class RExecutablePacket extends RPacket {
     }
     
     public static enum Side {
-        SPIGOT, PROXY, CLIENT, MULTIPROXY;
+        SPIGOT, PROXY, STATISTICS, CLIENT, MULTIPROXY;
     }
     
 }

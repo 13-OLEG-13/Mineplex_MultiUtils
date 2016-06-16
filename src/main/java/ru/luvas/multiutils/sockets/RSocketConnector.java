@@ -45,6 +45,8 @@ public class RSocketConnector {
         RPacketManager.register(Packet7Restart.class);
         RPacketManager.register(Packet8AchievementReplay.class);
         RPacketManager.register(Packet9NetworkLeveling.class);
+        
+        RPacketManager.register(Packet300MachineInfo.class);
     }
     
 }

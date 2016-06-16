@@ -70,26 +70,29 @@ public abstract class RServer {
                     try {
                         while(!interrupted) {
                             boolean sleep = false;
+                            QueuedPacket qpacket = null;
                             synchronized(locker) {
-                                if(!queue.isEmpty()) {
-                                    QueuedPacket qpacket = queue.poll();
-                                    RPacket packet = qpacket.packet;
-                                    RClient receiver = qpacket.receiver;
-                                    if(receiver.isDisconnected())
-                                        continue;
-                                    try {
-                                        DataOutputStream dos = receiver.getOutputStream();
-                                        dos.writeShort(packet.getId());
-                                        if(packet.isExecutable())
-                                            dos.writeUTF(((RExecutablePacket) packet).getUniqueId());
-                                        packet.write(dos);
-                                        dos.flush();
-                                    }catch(SocketException ex) {
-                                        receiver.disconnect();
-                                        //Client disappeared
-                                    }
-                                }else
+                                if(!queue.isEmpty())
+                                    qpacket = queue.poll();
+                                else
                                     sleep = true;
+                            }
+                            if(!sleep) {
+                                RPacket packet = qpacket.packet;
+                                RClient receiver = qpacket.receiver;
+                                if(receiver.isDisconnected())
+                                    continue;
+                                try {
+                                    DataOutputStream dos = receiver.getOutputStream();
+                                    dos.writeShort(packet.getId());
+                                    if(packet.isExecutable())
+                                        dos.writeUTF(((RExecutablePacket) packet).getUniqueId());
+                                    packet.write(dos);
+                                    dos.flush();
+                                }catch(SocketException ex) {
+                                    receiver.disconnect();
+                                    //Client disappeared
+                                }
                             }
                             if(sleep)
                                 try {
@@ -172,7 +175,7 @@ public abstract class RServer {
     private long lastWarning = 0l;
     
     private boolean checkPacketsOverflow() {
-        if(queue.size() >= 1000) {
+        if(queue.size() >= 2500) {
             long current = System.currentTimeMillis();
             if(current - lastWarning > 60000l) {
                 Logger.warn("Can not handle so many packets! There's a packets overflow!");
@@ -230,6 +233,15 @@ public abstract class RServer {
         if(client == null)
             throw new IllegalArgumentException("Could not find RClient named " + clientName + "!");
         send(packet, uniqueId, client);
+    }
+    
+    public RClient getClient(String clientName) {
+        clientsLock.readLock().lock();
+        try {
+            return clients.get(clientName);
+        }finally {
+            clientsLock.readLock().unlock();
+        }
     }
     
     public void announce(RPacket packet) {
@@ -304,7 +316,7 @@ public abstract class RServer {
         
         @Override
         public String toString() {
-            return "{" + receiver.getName() + ";" + packet.getClass().getSimpleName() + "}";
+            return "{" + receiver.getName() + ";" + packet.getId() + "}";
         }
         
     }

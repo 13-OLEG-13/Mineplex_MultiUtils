@@ -55,7 +55,7 @@ public class LastJoin {
     
     public void updateServer(String ip, String server) {
         MultiUtils.getProxyConnector().addToQueue("INSERT INTO last_joins VALUES ('%s', 0, '%s', '%s') "
-                + "ON DUPLICATE KEY UPDATE last_ip='%s', last_server='%s'",
+                + "ON DUPLICATE KEY UPDATE last_ip='%s', last_server='%s', last_exit=0",
                 owner, ip, server, ip, server);
         lastServer = server;
     }
