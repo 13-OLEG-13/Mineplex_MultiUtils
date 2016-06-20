@@ -14,6 +14,8 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import lombok.Getter;
@@ -82,17 +84,25 @@ public abstract class RServer {
                                 RClient receiver = qpacket.receiver;
                                 if(receiver.isDisconnected())
                                     continue;
+                                Future<?> future = RSocketConnector.getExecutorService().submit(() -> {
+                                    try {
+                                        DataOutputStream dos = receiver.getOutputStream();
+                                        dos.writeShort(packet.getId());
+                                        if(packet.isExecutable())
+                                            dos.writeUTF(((RExecutablePacket) packet).getUniqueId());
+                                        packet.write(dos);
+                                        dos.flush();
+                                    }catch(SocketException ex) {
+                                        receiver.disconnect();
+                                        //Client disappeared
+                                    }catch(Exception ex) {
+                                        receiver.disconnect();
+                                        ex.printStackTrace();
+                                    }
+                                });
                                 try {
-                                    DataOutputStream dos = receiver.getOutputStream();
-                                    dos.writeShort(packet.getId());
-                                    if(packet.isExecutable())
-                                        dos.writeUTF(((RExecutablePacket) packet).getUniqueId());
-                                    packet.write(dos);
-                                    dos.flush();
-                                }catch(SocketException ex) {
-                                    receiver.disconnect();
-                                    //Client disappeared
-                                }
+                                    future.get(1, TimeUnit.SECONDS);
+                                }catch(Exception ex) {}
                             }
                             if(sleep)
                                 try {

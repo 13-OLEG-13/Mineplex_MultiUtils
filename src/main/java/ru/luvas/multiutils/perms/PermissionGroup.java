@@ -10,7 +10,7 @@ import lombok.Getter;
  */
 public enum PermissionGroup {
     
-    PLAYER(0, "&7", "&7", "&7Игрок", "Игроки", 1f),
+    PLAYER(0, "&r&7", "&r&7", "&7Игрок", "Игроки", 1f),
     VIP(100, "&6&lVIP &6", "&6&lVIP &6", "&6VIP", "&6VIP", 2f),
     BETA(101, "&6&lβeta &6", "&6&lβeta &6", "&fБета-Тестер", "&fβeta", 2f),
     VIP_PLUS(200, "&3&lVIP+ &3", "&3&lVIP+ &3", "&3VIP+", "&3VIP+", 3f),
