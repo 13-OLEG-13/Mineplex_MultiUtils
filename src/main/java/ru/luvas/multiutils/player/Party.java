@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.Getter;
 import ru.luvas.multiutils.sockets.RIndependentClient;
 import ru.luvas.multiutils.sockets.packets.Packet5Parties;
@@ -17,6 +18,7 @@ import ru.luvas.multiutils.sockets.packets.Packet5Parties.Action;
  */
 public class Party {
 
+    @Getter
     private final static Map<String, Party> parties = new HashMap<>();
     
     public static Party get(String owner) {
@@ -41,8 +43,7 @@ public class Party {
     
     public static void updateRecreation(List<PartyMember> members) {
         Party p = new Party(members);
-        for(PartyMember member : members)
-            parties.put(member.getName().toLowerCase(), p);
+        members.stream().map(m -> m.getName().toLowerCase()).forEach(m -> parties.put(m, p));
     }
     
     @Getter
@@ -131,8 +132,7 @@ public class Party {
     }
     
     public void updateDisbanded() {
-        for(PartyMember member : members)
-            parties.remove(member.getName().toLowerCase());
+        members.stream().map(m -> m.getName().toLowerCase()).forEach(parties::remove);
         members.clear();
     }
     
@@ -144,16 +144,14 @@ public class Party {
             }
     }
     
+    @Data
     @AllArgsConstructor
     public static class PartyMember {
         
-        @Getter
         private final String name;
         
-        @Getter
         private final String coloredName;
         
-        @Getter
         private String server;
         
     }

@@ -96,7 +96,6 @@ public abstract class RServer {
                                         receiver.disconnect();
                                         //Client disappeared
                                     }catch(Exception ex) {
-                                        receiver.disconnect();
                                         ex.printStackTrace();
                                     }
                                 });

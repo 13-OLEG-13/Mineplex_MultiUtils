@@ -80,6 +80,7 @@ public class Packet6PartyUpdate extends RPacket {
                 if(p == null)
                     break;
                 p.updateOldMember(argument);
+                Party.getParties().remove(argument.toLowerCase());
                 break;
             }case CHANGED_LEADER: {
                 if(p == null)
