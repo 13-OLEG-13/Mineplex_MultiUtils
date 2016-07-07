@@ -5,7 +5,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import ru.luvas.multiutils.player.NetworkLeveling;
+import ru.luvas.multiutils.player.PlayerDatas;
+import ru.luvas.multiutils.player.sections.NetworkLeveling;
 import ru.luvas.multiutils.sockets.RPacket;
 
 /**
@@ -41,7 +42,7 @@ public class Packet9NetworkLeveling extends RPacket {
 
     @Override
     public void handleByClient() {
-        NetworkLeveling nl = NetworkLeveling.getClearly(player);
+        NetworkLeveling nl = PlayerDatas.getWithoutPreloading(NetworkLeveling.class, player);
         if(nl == null)
             return;
         if(level != 0)

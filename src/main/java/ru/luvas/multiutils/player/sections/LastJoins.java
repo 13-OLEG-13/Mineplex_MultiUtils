@@ -1,35 +1,16 @@
-package ru.luvas.multiutils.player;
+package ru.luvas.multiutils.player.sections;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import ru.luvas.multiutils.MultiUtils;
+import ru.luvas.multiutils.player.Section;
 
 /**
  *
  * @author RinesThaix
  */
-public class LastJoin {
-
-    private final static Map<String, LastJoin> joins = new HashMap<>();
-    
-    public static LastJoin get(String owner) {
-        LastJoin join = joins.get(owner.toLowerCase());
-        if(join != null)
-            return join;
-        join = new LastJoin(owner);
-        joins.put(owner.toLowerCase(), join);
-        return join;
-    }
-    
-    public static void invalidate(String owner) {
-        joins.remove(owner.toLowerCase());
-    }
-    
-    @Getter
-    private final String owner;
+public class LastJoins extends Section {
     
     @Getter
     private long lastExit;
@@ -40,7 +21,8 @@ public class LastJoin {
     @Getter
     private String lastServer;
     
-    public LastJoin(String owner) {
+    public LastJoins(String owner) {
+        super(owner);
         this.owner = owner;
         try(ResultSet set = MultiUtils.getProxyConnector().query("SELECT * FROM last_joins WHERE player_name='" + owner + "'")) {
             if(set.next()) {
@@ -65,10 +47,6 @@ public class LastJoin {
         MultiUtils.getProxyConnector().addToQueue("UPDATE last_joins SET last_exit=%d WHERE player_name='%s'",
                 current, owner);
         lastExit = current;
-    }
-    
-    public void invalidate() {
-        joins.remove(owner.toLowerCase());
     }
     
 }

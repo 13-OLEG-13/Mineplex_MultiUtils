@@ -1,35 +1,16 @@
-package ru.luvas.multiutils.player;
+package ru.luvas.multiutils.player.sections;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import ru.luvas.multiutils.MultiUtils;
+import ru.luvas.multiutils.player.Section;
 
 /**
  *
  * @author RinesThaix
  */
-public class Infractions {
-    
-    public final static Map<String, Infractions> infractions = new HashMap<>();
-    
-    public static Infractions get(String owner) {
-        Infractions infs = infractions.get(owner.toLowerCase());
-        if(infs != null)
-            return infs;
-        infs = new Infractions(owner);
-        infractions.put(owner.toLowerCase(), infs);
-        return infs;
-    }
-    
-    public static void invalidate(String owner) {
-        infractions.remove(owner.toLowerCase());
-    }
-    
-    @Getter
-    private final String owner;
+public class Infractions extends Section {
     
     @Getter
     private int bans;
@@ -55,8 +36,8 @@ public class Infractions {
     @Getter
     private String muteEnforcer;
     
-    private Infractions(String owner) {
-        this.owner = owner;
+    public Infractions(String owner) {
+        super(owner);
         try(ResultSet set = MultiUtils.getProxyConnector().query("SELECT * FROM infractions WHERE player_name='" + owner + "'")) {
             if(set.next()) {
                 bans = set.getInt("bans");
@@ -152,10 +133,6 @@ public class Infractions {
     
     public boolean isMuted() {
         return muteEnd > 0;
-    }
-    
-    public void invalidate() {
-        infractions.remove(owner.toLowerCase());
     }
     
 }

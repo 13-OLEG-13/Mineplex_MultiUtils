@@ -1,14 +1,14 @@
-package ru.luvas.multiutils.player;
+package ru.luvas.multiutils.player.sections;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import ru.luvas.multiutils.achievements.Achievement;
 import ru.luvas.multiutils.achievements.Achievements;
+import ru.luvas.multiutils.player.PlayerDatas;
+import ru.luvas.multiutils.player.Section;
 import ru.luvas.multiutils.sockets.RIndependentClient;
 import ru.luvas.multiutils.sockets.RSocketConnector;
 import ru.luvas.multiutils.sockets.packets.Packet3Friends;
@@ -18,29 +18,7 @@ import ru.luvas.multiutils.sockets.packets.Packet3Friends.Action;
  *
  * @author RinesThaix
  */
-public class Friends {
-
-    private final static Map<String, Friends> friends = new HashMap<>();
-    
-    public static Friends getClearly(String owner) {
-        return friends.get(owner.toLowerCase());
-    }
-    
-    public static Friends get(String owner) {
-        Friends f = friends.get(owner.toLowerCase());
-        if(f != null)
-            return f;
-        f = new Friends(owner);
-        friends.put(owner.toLowerCase(), f);
-        return f;
-    }
-    
-    public static void invalidate(String owner) {
-        friends.remove(owner.toLowerCase());
-    }
-    
-    @Getter
-    private final String owner;
+public class Friends extends Section {
     
     @Getter
     private List<FriendInfo> info = new ArrayList<>();
@@ -49,7 +27,7 @@ public class Friends {
     private List<String> requests = new ArrayList<>();
     
     public Friends(String owner) {
-        this.owner = owner;
+        super(owner);
         if(RSocketConnector.getConnectorMode() == RSocketConnector.ConnectorMode.CLIENT) {
             RIndependentClient.getInstance().send(new Packet3Friends(owner, Action.GET, "null", "null") {
             
@@ -65,10 +43,7 @@ public class Friends {
     }
     
     public boolean hasRequest(String player) {
-        for(String s : requests)
-            if(s.equalsIgnoreCase(player))
-                return true;
-        return false;
+        return requests.stream().anyMatch(s -> s.equalsIgnoreCase(player));
     }
     
     public void addRequest(String player) {
@@ -96,18 +71,16 @@ public class Friends {
     }
     
     public boolean isFriend(String name) {
-        for(FriendInfo friend : info)
-            if(friend.getName().equalsIgnoreCase(name))
-                return true;
-        return false;
+        return info.stream().map(FriendInfo::getName).anyMatch(fn -> fn.equalsIgnoreCase(name));
     }
     
     public void updateNewFriend(String player, long lastOnline, String currentServer) {
         boolean online = lastOnline == 0;
         info.add(new FriendInfo(player, online, lastOnline, currentServer));
-        Achievements achs = Achievements.get(owner);
+        Achievements achs = PlayerDatas.get(Achievements.class, owner);
         achs.addAchievement(Achievement.FIRST_FRIEND);
-        achs.checkAndInvalidate();
+        if(PlayerDatas.getWithoutPreloading(Infractions.class, owner) == null)
+            PlayerDatas.invalidate(Achievements.class, owner);
     }
     
     public void updateOldFriend(String player) {
@@ -120,12 +93,11 @@ public class Friends {
     }
     
     public void update(String player, long lastOnline, String currentServer) {
-        for(FriendInfo friend : info)
-            if(friend.getName().equalsIgnoreCase(player)) {
-                friend.online = lastOnline == 0;
-                friend.lastOnline = lastOnline;
-                friend.currentServer = currentServer;
-            }
+        info.stream().filter(f -> f.getName().equalsIgnoreCase(player)).forEach(f -> {
+            f.online = lastOnline == 0;
+            f.lastOnline = lastOnline;
+            f.currentServer = currentServer;
+        });
     }
     
     public void updateNewRequest(String player) {

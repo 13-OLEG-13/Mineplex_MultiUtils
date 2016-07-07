@@ -2,13 +2,11 @@ package ru.luvas.multiutils.achievements;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import ru.luvas.multiutils.MultiUtils;
 import ru.luvas.multiutils.Storager;
-import ru.luvas.multiutils.player.Infractions;
+import ru.luvas.multiutils.player.Section;
 import ru.luvas.multiutils.sockets.RExecutablePacket.Side;
 import ru.luvas.multiutils.sockets.RIndependentClient;
 import ru.luvas.multiutils.sockets.RSocketConnector;
@@ -19,33 +17,16 @@ import ru.luvas.multiutils.sockets.packets.Packet2Achievements;
  *
  * @author RinesThaix
  */
-public class Achievements {
-
-    private final static Map<String, Achievements> achs = new HashMap<>();
+public class Achievements extends Section {
+    
     public static GotAchievementRunnable runnable = new GotAchievementRunnable();
-    
-    public static Achievements get(String owner) {
-        Achievements ach = achs.get(owner.toLowerCase());
-        if(ach != null)
-            return ach;
-        ach = new Achievements(owner);
-        achs.put(owner.toLowerCase(), ach);
-        return ach;
-    }
-    
-    public static void invalidate(String owner) {
-        achs.remove(owner.toLowerCase());
-    }
-    
-    @Getter
-    private final String owner;
     
     @Setter
     @Getter
     private String achievements;
     
     public Achievements(String owner) {
-        this.owner = owner;
+        super(owner);
         if(RSocketConnector.getSide() == Side.SPIGOT) {
             RIndependentClient.getInstance().send(new Packet2Achievements(RIndependentClient.getInstance().getName(), owner, true, "null", 0) {
             
@@ -125,12 +106,6 @@ public class Achievements {
         achievements = Storager.update(achievements, id, true);
         MultiUtils.getProxyConnector().addToQueue("UPDATE achievements SET achievements='%s' WHERE player_name='%s'",
                 achievements, owner);
-    }
-    
-    public void checkAndInvalidate() {
-        Infractions infs = Infractions.infractions.get(owner.toLowerCase());
-        if(infs == null)
-            invalidate(owner);
     }
     
     public static class GotAchievementRunnable {

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import ru.luvas.multiutils.player.Friends.FriendInfo;
+import ru.luvas.multiutils.player.sections.Friends.FriendInfo;
 import ru.luvas.multiutils.sockets.RExecutablePacket;
 
 /**

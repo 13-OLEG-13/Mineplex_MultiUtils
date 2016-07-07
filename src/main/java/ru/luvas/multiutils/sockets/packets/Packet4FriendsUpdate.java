@@ -6,7 +6,8 @@ import java.io.IOException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import ru.luvas.multiutils.player.Friends;
+import ru.luvas.multiutils.player.PlayerDatas;
+import ru.luvas.multiutils.player.sections.Friends;
 import ru.luvas.multiutils.sockets.RPacket;
 
 /**
@@ -57,7 +58,7 @@ public class Packet4FriendsUpdate extends RPacket {
 
     @Override
     public void handleByClient() {
-        Friends f = Friends.getClearly(player);
+        Friends f = PlayerDatas.getWithoutPreloading(Friends.class, player);
         if(f == null)
             return;
         switch(action) {

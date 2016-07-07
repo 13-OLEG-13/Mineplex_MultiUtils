@@ -82,9 +82,9 @@ public abstract class RIndependentClient extends RClient {
                         }catch(InterruptedException ex) {}
                     }
                 }catch(Exception ex) {
-                    ex.printStackTrace();
+                    Logger.warn("Disabling due to unexpected network error!", ex);
                 }finally {
-                    disconnect();
+                    restart();
                 }
             }
             

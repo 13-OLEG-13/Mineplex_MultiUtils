@@ -20,7 +20,7 @@ public abstract class RExecutablePacket extends RPacket {
     }
 
     @Override
-    public boolean isExecutable() {
+    public final boolean isExecutable() {
         return true;
     }
     

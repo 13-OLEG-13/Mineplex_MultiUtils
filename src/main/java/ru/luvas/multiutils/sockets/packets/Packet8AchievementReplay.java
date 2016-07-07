@@ -5,9 +5,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import ru.luvas.multiutils.Logger;
 import ru.luvas.multiutils.achievements.Achievement;
 import ru.luvas.multiutils.achievements.Achievements;
+import ru.luvas.multiutils.player.PlayerDatas;
 import ru.luvas.multiutils.sockets.RIndependentClient;
 import ru.luvas.multiutils.sockets.RPacket;
 import ru.luvas.multiutils.sockets.RServer;
@@ -45,7 +45,7 @@ public class Packet8AchievementReplay extends RPacket {
         if(!RIndependentClient.getInstance().isPlayerHere(player))
             return;
         Achievements.runnable.got(player, Achievement.getById(id));
-        Achievements.get(player).updateAchievement(id);
+        PlayerDatas.get(Achievements.class, player).updateAchievement(id);
     }
 
     @Override

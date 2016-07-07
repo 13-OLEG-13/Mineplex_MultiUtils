@@ -29,6 +29,7 @@ public class RClient {
     @Getter
     private DataOutputStream outputStream;
     
+    @Getter
     private boolean disconnected = false;
     
     public RClient(Socket socket) {
@@ -64,8 +65,9 @@ public class RClient {
             RServer.getInstance().disconnected(this, kicked);
     }
     
-    public boolean isDisconnected() {
-        return disconnected;
+    @Override
+    public String toString() {
+        return name;
     }
     
 }

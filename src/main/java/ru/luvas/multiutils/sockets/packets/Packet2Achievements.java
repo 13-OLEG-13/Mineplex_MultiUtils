@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import ru.luvas.multiutils.achievements.Achievements;
+import ru.luvas.multiutils.player.PlayerDatas;
 import ru.luvas.multiutils.sockets.RExecutablePacket;
 import ru.luvas.multiutils.sockets.RServer;
 
@@ -67,7 +68,7 @@ public class Packet2Achievements extends RExecutablePacket {
 
     @Override
     public void handleByServer() {
-        Achievements achs = Achievements.get(player);
+        Achievements achs = PlayerDatas.get(Achievements.class, player);
         if(getOrAdd) {
             achievements = achs.getAchievements();
             RServer.getInstance().send(this, sender);
@@ -82,9 +83,6 @@ public class Packet2Achievements extends RExecutablePacket {
             if(!RServer.getInstance().getProxies().contains(sender))
                 RServer.getInstance().send(this, sender);
         }
-        //?
-//        if(!Infractions.infractions.containsKey(player.toLowerCase()))
-//            Achievements.invalidate(player);
     }
 
 }

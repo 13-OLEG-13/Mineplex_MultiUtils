@@ -14,8 +14,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import lombok.Getter;
@@ -82,26 +80,25 @@ public abstract class RServer {
                             if(!sleep) {
                                 RPacket packet = qpacket.packet;
                                 RClient receiver = qpacket.receiver;
+                                if(checkLastOverflowWarning())
+                                    Logger.warn("Information about the first packet in sending-packets queue:\n%s", getPacketInfo(packet));
                                 if(receiver.isDisconnected())
                                     continue;
-                                Future<?> future = RSocketConnector.getExecutorService().submit(() -> {
-                                    try {
-                                        DataOutputStream dos = receiver.getOutputStream();
-                                        dos.writeShort(packet.getId());
-                                        if(packet.isExecutable())
-                                            dos.writeUTF(((RExecutablePacket) packet).getUniqueId());
-                                        packet.write(dos);
-                                        dos.flush();
-                                    }catch(SocketException ex) {
-                                        receiver.disconnect();
-                                        //Client disappeared
-                                    }catch(Exception ex) {
-                                        ex.printStackTrace();
-                                    }
-                                });
                                 try {
-                                    future.get(1, TimeUnit.SECONDS);
-                                }catch(Exception ex) {}
+                                    if(packet.getId() == 114)
+                                        continue;
+                                    DataOutputStream dos = receiver.getOutputStream();
+                                    dos.writeShort(packet.getId());
+                                    if(packet.isExecutable())
+                                        dos.writeUTF(((RExecutablePacket) packet).getUniqueId());
+                                    packet.write(dos);
+                                    dos.flush();
+                                }catch(SocketException ex) {
+                                    receiver.disconnect();
+                                    //Client disappeared
+                                }catch(Exception ex) {
+                                    ex.printStackTrace();
+                                }
                             }
                             if(sleep)
                                 try {
@@ -182,6 +179,7 @@ public abstract class RServer {
     }
     
     private long lastWarning = 0l;
+    private long infoChecker = 0l;
     
     private boolean checkPacketsOverflow() {
         if(queue.size() >= 2500) {
@@ -193,6 +191,35 @@ public abstract class RServer {
             return true;
         }
         return false;
+    }
+    
+    private boolean checkLastOverflowWarning() {
+        if(queue.size() < 2500)
+            return false;
+        long current = System.currentTimeMillis();
+        if(current - infoChecker < 15000l)
+            return false;
+        infoChecker = current;
+        return true;
+    }
+    
+    private String getPacketInfo(RPacket packet) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Class: ").append(packet.getClass().getSimpleName()).append("\n");
+        try {
+            Class<?> clazz = packet.getClass();
+            while(clazz != Object.class) {
+                for(Field f : clazz.getFields()) {
+                    f.setAccessible(true);
+                    sb.append(f.getName()).append(": ").append(f.get(packet)).append("\n");
+                    f.setAccessible(false);
+                }
+                clazz = clazz.getSuperclass();
+            }
+        }catch(SecurityException | IllegalArgumentException | IllegalAccessException ex) {
+            Logger.warn("Can not get packet's info!", ex);
+        }
+        return sb.toString().trim();
     }
     
     public void send(RPacket packet, RClient client) {
@@ -260,51 +287,46 @@ public abstract class RServer {
     
     private void handle(Socket client) {
         final RClient rclient = new RClient(client);
-        RSocketConnector.getExecutorService().execute(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    while(!rclient.isDisconnected()) {
-                        DataInputStream dis = rclient.getInputStream();
-                        if(dis.available() > 0) {
-                            RPacket packet = RPacketManager.createPacket(rclient);
-                            boolean executed = false;
-                            if(packet.isExecutable()) {
-                                RExecutablePacket execp = (RExecutablePacket) packet;
-                                if(execp.getServerSide() == Side.MULTIPROXY) {
-                                    executed = true;
-                                    RExecutablePacket trueExecp = executables.remove(execp.getUniqueId());
-                                    for(Field f : execp.getClass().getDeclaredFields()) {
-                                        f.setAccessible(true);
-                                        f.set(trueExecp, f.get(execp));
-                                        f.setAccessible(false);
-                                    }
-                                    try {
-                                        trueExecp.execute();
-                                    }catch(Exception ex) {
-                                        Logger.warn("Can not execute packet!", ex);
-                                    }
+        RSocketConnector.getExecutorService().execute(() -> {
+            try {
+                while(!rclient.isDisconnected()) {
+                    DataInputStream dis = rclient.getInputStream();
+                    if(dis.available() > 0) {
+                        RPacket packet = RPacketManager.createPacket(rclient);
+                        boolean executed = false;
+                        if(packet.isExecutable()) {
+                            RExecutablePacket execp = (RExecutablePacket) packet;
+                            if(execp.getServerSide() == Side.MULTIPROXY) {
+                                executed = true;
+                                RExecutablePacket trueExecp = executables.remove(execp.getUniqueId());
+                                for(Field f : execp.getClass().getDeclaredFields()) {
+                                    f.setAccessible(true);
+                                    f.set(trueExecp, f.get(execp));
+                                    f.setAccessible(false);
+                                }
+                                try {
+                                    trueExecp.execute();
+                                }catch(Exception ex) {
+                                    Logger.warn("Can not execute packet!", ex);
                                 }
                             }
-                            if(!executed)
-                                try {
-                                    packet.handleByServer();
-                                }catch(Exception ex) {
-                                    Logger.warn("Can not handle packet by server!", ex);
-                                }
                         }
-                        try {
-                            Thread.sleep(50l);
-                        }catch(InterruptedException ex) {}
+                        if(!executed)
+                            try {
+                                packet.handleByServer();
+                            }catch(Exception ex) {
+                                Logger.warn("Can not handle packet by server!", ex);
+                            }
                     }
-                }catch(Exception ex) {
-                    ex.printStackTrace();
-                }finally {
-                    rclient.disconnect();
+                    try {
+                        Thread.sleep(50l);
+                    }catch(InterruptedException ex) {}
                 }
+            }catch(Exception ex) {
+                Logger.warn("There's an error in packet receiving from " + rclient.getName(), ex);
+            }finally {
+                rclient.disconnect();
             }
-            
         });
         send(new Packet0Identifying(), rclient);
     }
