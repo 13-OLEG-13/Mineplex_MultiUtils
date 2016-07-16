@@ -14,7 +14,8 @@ public enum AchievementSection {
     GENERAL,
     SKYWARS,
     HUNGER_GAMES,
-    BEDWARS;
+    BEDWARS,
+    ANNIHILATION;
     
     @Getter
     private final List<Achievement> achievements = new ArrayList<>();

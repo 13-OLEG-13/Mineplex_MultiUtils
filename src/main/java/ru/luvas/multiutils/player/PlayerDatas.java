@@ -51,6 +51,10 @@ public class PlayerDatas {
         sections.put(clazz, section);
     }
     
+    public final static <T extends Section> void register(Class<T> clazz) {
+        sections.put(clazz, new ReflexiveSection<>(clazz));
+    }
+    
     public final static void unregister(Class<? extends Section> clazz) {
         sections.remove(clazz);
     }

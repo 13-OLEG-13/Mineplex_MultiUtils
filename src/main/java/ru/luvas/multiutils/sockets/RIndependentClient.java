@@ -40,54 +40,49 @@ public abstract class RIndependentClient extends RClient {
         instance = this;
         Logger.log("New independent client created!");
         connect(serverIp, serverPort, false);
-        RSocketConnector.getExecutorService().execute(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    while(!isDisconnected()) {
-                        DataInputStream dis = getInputStream();
-                        if(dis.available() > 0) {
-                            RPacket packet = RPacketManager.createPacket(getInstance());
-                            lastPacketAccepted = System.currentTimeMillis();
-                            boolean executed = false;
-                            if(packet.isExecutable()) {
-                                RExecutablePacket execp = (RExecutablePacket) packet;
-                                if(execp.getServerSide() == RSocketConnector.getSide() || execp.getServerSide() == Side.CLIENT) {
-                                    RExecutablePacket trueExecp = executables.remove(execp.getUniqueId());
-                                    if(trueExecp != null) {
-                                        for(Field f : execp.getClass().getDeclaredFields()) {
-                                            f.setAccessible(true);
-                                            f.set(trueExecp, f.get(execp));
-                                            f.setAccessible(false);
-                                        }
-                                        try {
-                                            trueExecp.execute();
-                                        }catch(Exception ex) {
-                                            ex.printStackTrace();
-                                        }
-                                        executed = true;
+        RSocketConnector.getExecutorService().execute(() -> {
+            try {
+                while(!isDisconnected()) {
+                    DataInputStream dis = getInputStream();
+                    if(dis.available() > 0) {
+                        RPacket packet = RPacketManager.createPacket(getInstance());
+                        lastPacketAccepted = System.currentTimeMillis();
+                        boolean executed = false;
+                        if(packet.isExecutable()) {
+                            RExecutablePacket execp = (RExecutablePacket) packet;
+                            if(execp.getServerSide() == RSocketConnector.getSide() || execp.getServerSide() == Side.CLIENT) {
+                                RExecutablePacket trueExecp = executables.remove(execp.getUniqueId());
+                                if(trueExecp != null) {
+                                    for(Field f : execp.getClass().getDeclaredFields()) {
+                                        f.setAccessible(true);
+                                        f.set(trueExecp, f.get(execp));
+                                        f.setAccessible(false);
                                     }
+                                    try {
+                                        trueExecp.execute();
+                                    }catch(Exception ex) {
+                                        ex.printStackTrace();
+                                    }
+                                    executed = true;
                                 }
                             }
-                            if(!executed)
-                                try {
-                                    packet.handleByClient();
-                                }catch(Exception ex) {
-                                    ex.printStackTrace();
-                                }
                         }
-                        try {
-                            Thread.sleep(50l);
-                        }catch(InterruptedException ex) {}
+                        if(!executed)
+                            try {
+                                packet.handleByClient();
+                            }catch(Exception ex) {
+                                ex.printStackTrace();
+                            }
                     }
-                }catch(Exception ex) {
-                    Logger.warn("Disabling due to unexpected network error!", ex);
-                }finally {
-                    restart();
+                    try {
+                        Thread.sleep(50l);
+                    }catch(InterruptedException ex) {}
                 }
+            }catch(Exception ex) {
+                Logger.warn("Disabling due to unexpected network error!", ex);
+            }finally {
+                restart();
             }
-            
         });
         RSocketConnector.getExecutorService().execute(new Runnable() {
 

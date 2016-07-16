@@ -85,8 +85,6 @@ public abstract class RServer {
                                 if(receiver.isDisconnected())
                                     continue;
                                 try {
-                                    if(packet.getId() == 114)
-                                        continue;
                                     DataOutputStream dos = receiver.getOutputStream();
                                     dos.writeShort(packet.getId());
                                     if(packet.isExecutable())
@@ -281,8 +279,7 @@ public abstract class RServer {
     }
     
     public void announce(RPacket packet) {
-        for(String proxy : getProxies())
-            send(packet, proxy);
+        getProxies().forEach(p -> send(packet, p));
     }
     
     private void handle(Socket client) {
