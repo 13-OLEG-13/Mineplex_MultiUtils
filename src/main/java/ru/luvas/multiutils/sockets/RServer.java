@@ -16,6 +16,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import lombok.Data;
 import lombok.Getter;
 import ru.luvas.multiutils.Logger;
 import ru.luvas.multiutils.sockets.RExecutablePacket.Side;
@@ -28,6 +29,8 @@ public abstract class RServer {
     
     private final Object locker = new Object();
     private final Random r = new Random();
+    
+    @Getter
     private static RServer instance;
     
     private ServerSocket server;
@@ -49,65 +52,55 @@ public abstract class RServer {
         instance = this;
         try {
             server = new ServerSocket(port);
-            RSocketConnector.getExecutorService().execute(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        while(!interrupted)
-                            handle(server.accept());
-                    }catch(Exception ex) {
-                        if(!(ex instanceof SocketException))
-                            ex.printStackTrace();
-                    }
-                }
-                
-            });
-            RSocketConnector.getExecutorService().execute(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        while(!interrupted) {
-                            boolean sleep = false;
-                            QueuedPacket qpacket = null;
-                            synchronized(locker) {
-                                if(!queue.isEmpty())
-                                    qpacket = queue.poll();
-                                else
-                                    sleep = true;
-                            }
-                            if(!sleep) {
-                                RPacket packet = qpacket.packet;
-                                RClient receiver = qpacket.receiver;
-                                if(checkLastOverflowWarning())
-                                    Logger.warn("Information about the first packet in sending-packets queue:\n%s", getPacketInfo(packet));
-                                if(receiver.isDisconnected())
-                                    continue;
-                                try {
-                                    DataOutputStream dos = receiver.getOutputStream();
-                                    dos.writeShort(packet.getId());
-                                    if(packet.isExecutable())
-                                        dos.writeUTF(((RExecutablePacket) packet).getUniqueId());
-                                    packet.write(dos);
-                                    dos.flush();
-                                }catch(SocketException ex) {
-                                    receiver.disconnect();
-                                    //Client disappeared
-                                }catch(Exception ex) {
-                                    ex.printStackTrace();
-                                }
-                            }
-                            if(sleep)
-                                try {
-                                    Thread.sleep(50l);
-                                }catch(InterruptedException ex) {}
-                        }
-                    }catch(Exception ex) {
+            RSocketConnector.getExecutorService().execute(() -> {
+                try {
+                    while(!interrupted)
+                        handle(server.accept());
+                }catch(Exception ex) {
+                    if(!(ex instanceof SocketException))
                         ex.printStackTrace();
-                    }
                 }
-                
+            });
+            RSocketConnector.getExecutorService().execute(() -> {
+                try {
+                    while(!interrupted) {
+                        boolean sleep = false;
+                        QueuedPacket qpacket = null;
+                        synchronized(locker) {
+                            if(!queue.isEmpty())
+                                qpacket = queue.poll();
+                            else
+                                sleep = true;
+                        }
+                        if(!sleep) {
+                            RPacket packet = qpacket.packet;
+                            RClient receiver = qpacket.receiver;
+                            if(checkLastOverflowWarning())
+                                Logger.warn("Information about the first packet in sending-packets queue:\n%s", getPacketInfo(packet));
+                            if(receiver.isDisconnected() || packet.getId() == 114)
+                                continue;
+                            try {
+                                DataOutputStream dos = receiver.getOutputStream();
+                                dos.writeShort(packet.getId());
+                                if(packet.isExecutable())
+                                    dos.writeUTF(((RExecutablePacket) packet).getUniqueId());
+                                packet.write(dos);
+                                dos.flush();
+                            }catch(SocketException ex) {
+                                receiver.disconnect();
+                                //Client disappeared
+                            }catch(Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        }
+                        if(sleep)
+                            try {
+                                Thread.sleep(50l);
+                            }catch(InterruptedException ex) {}
+                    }
+                }catch(Exception ex) {
+                    ex.printStackTrace();
+                }
             });
         }catch(Exception ex) {
             ex.printStackTrace();
@@ -328,19 +321,11 @@ public abstract class RServer {
         send(new Packet0Identifying(), rclient);
     }
     
-    public static RServer getInstance() {
-        return instance;
-    }
-    
+    @Data
     private static class QueuedPacket {
         
         private final RClient receiver;
         private final RPacket packet;
-        
-        public QueuedPacket(RClient receiver, RPacket packet) {
-            this.receiver = receiver;
-            this.packet = packet;
-        }
         
         @Override
         public String toString() {

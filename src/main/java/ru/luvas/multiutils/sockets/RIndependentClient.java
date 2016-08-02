@@ -84,19 +84,14 @@ public abstract class RIndependentClient extends RClient {
                 restart();
             }
         });
-        RSocketConnector.getExecutorService().execute(new Runnable() {
-
-            @Override
-            public void run() {
-                while(true) {
-                    if(!isDisconnected() && System.currentTimeMillis() - lastPacketAccepted > 5000l)
-                        send(new Packet1Ping());
-                    try {
-                        Thread.sleep(10000l);
-                    }catch(InterruptedException ex) {}
-                }
+        RSocketConnector.getExecutorService().execute(() -> {
+            while(true) {
+                if(!isDisconnected() && System.currentTimeMillis() - lastPacketAccepted > 5000l)
+                    send(new Packet1Ping());
+                try {
+                    Thread.sleep(10000l);
+                }catch(InterruptedException ex) {}
             }
-            
         });
     }
     
@@ -108,39 +103,34 @@ public abstract class RIndependentClient extends RClient {
         try {
             Socket socket = new Socket(ip, port);
             setSocket(socket);
-            RSocketConnector.getExecutorService().execute(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        while(!isDisconnected()) {
-                            boolean sleep = false;
-                            synchronized(locker) {
-                                if(!queue.isEmpty()) {
-                                    RPacket packet = queue.peek();
-                                    getOutputStream().writeShort(packet.getId());
-                                    if(packet.isExecutable())
-                                        getOutputStream().writeUTF(((RExecutablePacket) packet).getUniqueId());
-                                    packet.write(getOutputStream());
-                                    getOutputStream().flush();
-                                    queue.poll();
-                                }else
-                                    sleep = true;
-                            }
-                            if(sleep)
-                                try {
-                                    Thread.sleep(50l);
-                                }catch(InterruptedException ex) {}
+            RSocketConnector.getExecutorService().execute(() -> {
+                try {
+                    while(!isDisconnected()) {
+                        boolean sleep = false;
+                        synchronized(locker) {
+                            if(!queue.isEmpty()) {
+                                RPacket packet = queue.peek();
+                                getOutputStream().writeShort(packet.getId());
+                                if(packet.isExecutable())
+                                    getOutputStream().writeUTF(((RExecutablePacket) packet).getUniqueId());
+                                packet.write(getOutputStream());
+                                getOutputStream().flush();
+                                queue.poll();
+                            }else
+                                sleep = true;
                         }
-                    }catch(SocketException ex) {
-                        Logger.warn("Connection to the RServer disappeared! Reconnecting..");
-                        connect(ip, port, true);
-                    }catch(Exception ex) {
-                        ex.printStackTrace();
-                        disconnect();
+                        if(sleep)
+                            try {
+                                Thread.sleep(50l);
+                            }catch(InterruptedException ex) {}
                     }
+                }catch(SocketException ex) {
+                    Logger.warn("Connection to the RServer disappeared! Reconnecting..");
+                    connect(ip, port, true);
+                }catch(Exception ex) {
+                    ex.printStackTrace();
+                    disconnect();
                 }
-
             });
             if(reconnect)
                 Logger.log("Reconnected? Waiting for Multiproxy's response..");

@@ -1,6 +1,7 @@
 package ru.luvas.multiutils;
 
 import lombok.Getter;
+import lombok.Setter;
 import ru.luvas.multiutils.sql.Connector;
 import ru.luvas.multiutils.sql.ConnectorBuilder;
 
@@ -18,6 +19,10 @@ public class MultiUtils {
     
     @Getter
     private static Connector proxyConnector;
+    
+    @Setter
+    @Getter
+    private static boolean inDebugMode = false;
 
     public static void initPermissionsConnector(String host, int port, String user, String pass, String db) {
         permissionsConnector = new ConnectorBuilder()
