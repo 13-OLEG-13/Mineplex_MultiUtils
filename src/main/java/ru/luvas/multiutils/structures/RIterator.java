@@ -1,6 +1,7 @@
 package ru.luvas.multiutils.structures;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -27,9 +28,16 @@ public class RIterator<T> implements Iterator<T> {
         this.iterator = collection.iterator();
         this.createdByCollection = false;
     }
+    
+    public RIterator(T... instances) {
+        collection = new ArrayList<>();
+        collection.addAll(Arrays.asList(instances));
+        this.iterator = collection.iterator();
+        this.createdByCollection = false;
+    }
 
     /**
-     * @return true whether collection is not empty
+     * @readdAArrays.asList(instances)ln true whether collection is not empty
      */
     @Override
     public boolean hasNext() {

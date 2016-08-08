@@ -77,7 +77,7 @@ public abstract class RServer {
                             RClient receiver = qpacket.receiver;
                             if(checkLastOverflowWarning())
                                 Logger.warn("Information about the first packet in sending-packets queue:\n%s", getPacketInfo(packet));
-                            if(receiver.isDisconnected() || packet.getId() == 114)
+                            if(receiver.isDisconnected())
                                 continue;
                             try {
                                 DataOutputStream dos = receiver.getOutputStream();
